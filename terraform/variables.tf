@@ -1,7 +1,7 @@
 variable "server_name" {
   description = "Hetzner Cloud server name"
   type        = string
-  default     = "aveeus"
+  default     = "avedeus"
 }
 
 variable "server_type" {
@@ -37,7 +37,7 @@ variable "ssh_private_key_path" {
 variable "domain" {
   description = "Public domain for Continuous-Tunes"
   type        = string
-  default     = "aveeus.ovh"
+  default     = "avedeus.ovh"
 }
 
 variable "manage_dns" {
@@ -49,7 +49,7 @@ variable "manage_dns" {
 variable "cloudflare_zone_name" {
   description = "Cloudflare zone name (usually same as domain)"
   type        = string
-  default     = "aveeus.ovh"
+  default     = "avedeus.ovh"
 }
 
 variable "dns_proxied" {

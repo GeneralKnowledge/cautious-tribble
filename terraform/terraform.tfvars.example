@@ -2,12 +2,12 @@
 
 letsencrypt_email = "you@example.com"
 
-server_name = "aveeus"
+server_name = "avedeus"
 server_type = "cx22"
 location    = "nbg1" # or fsn1 / hel1
 
-domain               = "aveeus.ovh"
-cloudflare_zone_name = "aveeus.ovh"
+domain               = "avedeus.ovh"
+cloudflare_zone_name = "avedeus.ovh"
 manage_dns           = true
 dns_proxied          = false # true = Cloudflare orange-cloud proxy
 create_www_cname     = true

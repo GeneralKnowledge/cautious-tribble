@@ -22,9 +22,9 @@ fi
 
 "${SSH[@]}" bash -s <<'EOS'
 set -euo pipefail
-cd /opt/aveeus/app && git pull --ff-only
-cd /opt/aveeus/infra && git pull --ff-only
-cd /opt/aveeus/infra/deploy
+cd /opt/avedeus/app && git pull --ff-only
+cd /opt/avedeus/infra && git pull --ff-only
+cd /opt/avedeus/infra/deploy
 docker compose up -d --build --remove-orphans
 docker compose ps
 curl -fsS http://127.0.0.1/healthz || curl -fsS https://127.0.0.1/healthz || true

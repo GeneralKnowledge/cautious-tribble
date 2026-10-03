@@ -9,7 +9,7 @@ set -euo pipefail
 
 TARGET="${1:?Usage: $0 user@host email [domain]}"
 EMAIL="${2:?Usage: $0 user@host email [domain]}"
-DOMAIN="${3:-aveeus.ovh}"
+DOMAIN="${3:-avedeus.ovh}"
 APP_REPO="${APP_REPO:-https://github.com/GeneralKnowledge/Continuous-Tunes.git}"
 INFRA_REPO="${INFRA_REPO:-https://github.com/GeneralKnowledge/cautious-tribble.git}"
 INFRA_BRANCH="${INFRA_BRANCH:-main}"
@@ -24,11 +24,11 @@ fi
 
 # Prefer shipping the local script (works before the branch is pushed/merged).
 # Fall back to curling from GitHub if scp is unavailable.
-if scp -o StrictHostKeyChecking=accept-new "$INSTALL_SCRIPT" "${TARGET}:/tmp/aveeus-install.sh"; then
+if scp -o StrictHostKeyChecking=accept-new "$INSTALL_SCRIPT" "${TARGET}:/tmp/avedeus-install.sh"; then
   ssh -o StrictHostKeyChecking=accept-new "$TARGET" \
     sudo env EMAIL="$EMAIL" DOMAIN="$DOMAIN" APP_REPO="$APP_REPO" \
     INFRA_REPO="$INFRA_REPO" INFRA_BRANCH="$INFRA_BRANCH" \
-    bash /tmp/aveeus-install.sh
+    bash /tmp/avedeus-install.sh
 else
   ssh -o StrictHostKeyChecking=accept-new "$TARGET" \
     env EMAIL="$EMAIL" DOMAIN="$DOMAIN" APP_REPO="$APP_REPO" \

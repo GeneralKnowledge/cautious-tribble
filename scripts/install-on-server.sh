@@ -5,7 +5,7 @@
 # One-liner (Hetzner Cloud Console → your server → Console, or SSH):
 #
 #   curl -fsSL https://raw.githubusercontent.com/GeneralKnowledge/cautious-tribble/main/scripts/install-on-server.sh \
-#     | sudo env EMAIL=you@example.com DOMAIN=aveeus.ovh bash
+#     | sudo env EMAIL=you@example.com DOMAIN=avedeus.ovh bash
 #
 # Env:
 #   EMAIL          required — Let's Encrypt registration
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 EMAIL="${EMAIL:?Set EMAIL=you@example.com for Let's Encrypt}"
-DOMAIN="${DOMAIN:-aveeus.ovh}"
+DOMAIN="${DOMAIN:-avedeus.ovh}"
 APP_REPO="${APP_REPO:-https://github.com/GeneralKnowledge/Continuous-Tunes.git}"
 INFRA_REPO="${INFRA_REPO:-https://github.com/GeneralKnowledge/cautious-tribble.git}"
 INFRA_BRANCH="${INFRA_BRANCH:-main}"
@@ -58,35 +58,35 @@ ufw allow 80/tcp
 ufw allow 443/tcp
 ufw --force enable
 
-echo "==> Layout under /opt/aveeus"
-install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" /opt/aveeus
+echo "==> Layout under /opt/avedeus"
+install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" /opt/avedeus
 
-if [[ ! -d /opt/aveeus/infra/.git ]]; then
-  sudo -u "$DEPLOY_USER" git clone --branch "$INFRA_BRANCH" "$INFRA_REPO" /opt/aveeus/infra
+if [[ ! -d /opt/avedeus/infra/.git ]]; then
+  sudo -u "$DEPLOY_USER" git clone --branch "$INFRA_BRANCH" "$INFRA_REPO" /opt/avedeus/infra
 else
-  sudo -u "$DEPLOY_USER" git -C /opt/aveeus/infra fetch --all --prune
-  sudo -u "$DEPLOY_USER" git -C /opt/aveeus/infra checkout "$INFRA_BRANCH"
-  sudo -u "$DEPLOY_USER" git -C /opt/aveeus/infra pull --ff-only origin "$INFRA_BRANCH" || true
+  sudo -u "$DEPLOY_USER" git -C /opt/avedeus/infra fetch --all --prune
+  sudo -u "$DEPLOY_USER" git -C /opt/avedeus/infra checkout "$INFRA_BRANCH"
+  sudo -u "$DEPLOY_USER" git -C /opt/avedeus/infra pull --ff-only origin "$INFRA_BRANCH" || true
 fi
 
-if [[ ! -d /opt/aveeus/app/.git ]]; then
-  sudo -u "$DEPLOY_USER" git clone "$APP_REPO" /opt/aveeus/app
+if [[ ! -d /opt/avedeus/app/.git ]]; then
+  sudo -u "$DEPLOY_USER" git clone "$APP_REPO" /opt/avedeus/app
 else
-  sudo -u "$DEPLOY_USER" git -C /opt/aveeus/app pull --ff-only || true
+  sudo -u "$DEPLOY_USER" git -C /opt/avedeus/app pull --ff-only || true
 fi
 
-cat >/opt/aveeus/infra/deploy/.env <<EOF
+cat >/opt/avedeus/infra/deploy/.env <<EOF
 DOMAIN=${DOMAIN}
 EMAIL=${EMAIL}
 EOF
-chown "$DEPLOY_USER:$DEPLOY_USER" /opt/aveeus/infra/deploy/.env
+chown "$DEPLOY_USER:$DEPLOY_USER" /opt/avedeus/infra/deploy/.env
 
 echo "==> Building and starting Continuous-Tunes + Caddy"
-cd /opt/aveeus/infra/deploy
+cd /opt/avedeus/infra/deploy
 docker compose up -d --build --remove-orphans
 
 echo "==> Enabling avedeus.service (restart stack on reboot)"
-tee /etc/systemd/system/aveeus.service >/dev/null <<'UNIT'
+tee /etc/systemd/system/avedeus.service >/dev/null <<'UNIT'
 [Unit]
 Description=AveDeus Continuous-Tunes stack
 Requires=docker.service
@@ -96,7 +96,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/opt/aveeus/infra/deploy
+WorkingDirectory=/opt/avedeus/infra/deploy
 ExecStart=/usr/bin/docker compose up -d --remove-orphans
 ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0

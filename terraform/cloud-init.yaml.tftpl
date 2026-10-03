@@ -20,7 +20,7 @@ packages:
   - qemu-guest-agent
 
 write_files:
-  - path: /etc/aveeus.env
+  - path: /etc/avedeus.env
     owner: root:root
     permissions: "0644"
     content: |
@@ -33,14 +33,14 @@ write_files:
       FLOATING_IP=${floating_ip}
       DEPLOY_USER=${deploy_user}
 
-  - path: /usr/local/bin/aveeus-bootstrap.sh
+  - path: /usr/local/bin/avedeus-bootstrap.sh
     owner: root:root
     permissions: "0755"
     content: |
       #!/usr/bin/env bash
       set -euo pipefail
       # shellcheck disable=SC1091
-      source /etc/aveeus.env
+      source /etc/avedeus.env
       export DEBIAN_FRONTEND=noninteractive
 
       if ! command -v docker >/dev/null 2>&1; then
@@ -78,33 +78,33 @@ write_files:
         netplan apply || true
       fi
 
-      install -d -o "$${DEPLOY_USER}" -g "$${DEPLOY_USER}" /opt/aveeus
+      install -d -o "$${DEPLOY_USER}" -g "$${DEPLOY_USER}" /opt/avedeus
 
-      if [[ ! -d /opt/aveeus/infra/.git ]]; then
-        sudo -u "$${DEPLOY_USER}" git clone --branch "$${INFRA_REPO_BRANCH}" "$${INFRA_REPO_URL}" /opt/aveeus/infra
+      if [[ ! -d /opt/avedeus/infra/.git ]]; then
+        sudo -u "$${DEPLOY_USER}" git clone --branch "$${INFRA_REPO_BRANCH}" "$${INFRA_REPO_URL}" /opt/avedeus/infra
       else
-        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/infra fetch --all --prune
-        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/infra checkout "$${INFRA_REPO_BRANCH}"
-        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/infra pull --ff-only origin "$${INFRA_REPO_BRANCH}" || true
+        sudo -u "$${DEPLOY_USER}" git -C /opt/avedeus/infra fetch --all --prune
+        sudo -u "$${DEPLOY_USER}" git -C /opt/avedeus/infra checkout "$${INFRA_REPO_BRANCH}"
+        sudo -u "$${DEPLOY_USER}" git -C /opt/avedeus/infra pull --ff-only origin "$${INFRA_REPO_BRANCH}" || true
       fi
 
-      if [[ ! -d /opt/aveeus/app/.git ]]; then
-        sudo -u "$${DEPLOY_USER}" git clone "$${APP_REPO_URL}" /opt/aveeus/app
+      if [[ ! -d /opt/avedeus/app/.git ]]; then
+        sudo -u "$${DEPLOY_USER}" git clone "$${APP_REPO_URL}" /opt/avedeus/app
       else
-        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/app pull --ff-only || true
+        sudo -u "$${DEPLOY_USER}" git -C /opt/avedeus/app pull --ff-only || true
       fi
 
-      cat >/opt/aveeus/infra/deploy/.env <<ENV
+      cat >/opt/avedeus/infra/deploy/.env <<ENV
       DOMAIN=$${DOMAIN}
       EMAIL=$${EMAIL}
       ENV
-      chown "$${DEPLOY_USER}:$${DEPLOY_USER}" /opt/aveeus/infra/deploy/.env
+      chown "$${DEPLOY_USER}:$${DEPLOY_USER}" /opt/avedeus/infra/deploy/.env
 
-      cd /opt/aveeus/infra/deploy
+      cd /opt/avedeus/infra/deploy
       docker compose pull || true
       docker compose up -d --build --remove-orphans
 
-      cat >/etc/systemd/system/aveeus.service <<'UNIT'
+      cat >/etc/systemd/system/avedeus.service <<'UNIT'
       [Unit]
       Description=AveDeus Continuous-Tunes stack
       Requires=docker.service
@@ -114,7 +114,7 @@ write_files:
       [Service]
       Type=oneshot
       RemainAfterExit=yes
-      WorkingDirectory=/opt/aveeus/infra/deploy
+      WorkingDirectory=/opt/avedeus/infra/deploy
       ExecStart=/usr/bin/docker compose up -d --remove-orphans
       ExecStop=/usr/bin/docker compose down
       TimeoutStartSec=0
@@ -128,4 +128,4 @@ write_files:
 
 runcmd:
   - [ systemctl, enable, --now, fail2ban ]
-  - [ /usr/local/bin/aveeus-bootstrap.sh ]
+  - [ /usr/local/bin/avedeus-bootstrap.sh ]

@@ -34,7 +34,7 @@ outputs:
 bootstrap:
 	@test -n "$(HOST)" || (echo "HOST=user@ip required" && exit 1)
 	@test -n "$(EMAIL)" || (echo "EMAIL=you@example.com required" && exit 1)
-	./scripts/bootstrap-existing.sh "$(HOST)" "$(EMAIL)" "$(or $(DOMAIN),aveeus.ovh)"
+	./scripts/bootstrap-existing.sh "$(HOST)" "$(EMAIL)" "$(or $(DOMAIN),avedeus.ovh)"
 
 deploy:
 	./scripts/deploy.sh $(HOST)
