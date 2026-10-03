@@ -1,0 +1,131 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+users:
+  - name: ${deploy_user}
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - ufw
+  - fail2ban
+  - unattended-upgrades
+  - qemu-guest-agent
+
+write_files:
+  - path: /etc/aveeus.env
+    owner: root:root
+    permissions: "0644"
+    content: |
+      DOMAIN=${domain}
+      EMAIL=${letsencrypt_email}
+      APP_REPO_URL=${app_repo_url}
+      INFRA_REPO_URL=${infra_repo_url}
+      INFRA_REPO_BRANCH=${infra_repo_branch}
+      USE_FLOATING_IP=${use_floating_ip}
+      FLOATING_IP=${floating_ip}
+      DEPLOY_USER=${deploy_user}
+
+  - path: /usr/local/bin/aveeus-bootstrap.sh
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      # shellcheck disable=SC1091
+      source /etc/aveeus.env
+      export DEBIAN_FRONTEND=noninteractive
+
+      if ! command -v docker >/dev/null 2>&1; then
+        install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        chmod a+r /etc/apt/keyrings/docker.asc
+        arch="$(dpkg --print-architecture)"
+        codename="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+        echo "deb [arch=$${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $${codename} stable" \
+          > /etc/apt/sources.list.d/docker.list
+        apt-get update -y
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      fi
+
+      systemctl enable --now docker
+      systemctl enable --now qemu-guest-agent || true
+      usermod -aG docker "$${DEPLOY_USER}" || true
+
+      ufw default deny incoming
+      ufw default allow outgoing
+      ufw allow OpenSSH
+      ufw allow 80/tcp
+      ufw allow 443/tcp
+      ufw --force enable
+
+      if [[ "$${USE_FLOATING_IP}" == "true" && -n "$${FLOATING_IP}" ]]; then
+        cat >/etc/netplan/60-floating-ip.yaml <<NET
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            addresses:
+              - $${FLOATING_IP}/32
+      NET
+        netplan apply || true
+      fi
+
+      install -d -o "$${DEPLOY_USER}" -g "$${DEPLOY_USER}" /opt/aveeus
+
+      if [[ ! -d /opt/aveeus/infra/.git ]]; then
+        sudo -u "$${DEPLOY_USER}" git clone --branch "$${INFRA_REPO_BRANCH}" "$${INFRA_REPO_URL}" /opt/aveeus/infra
+      else
+        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/infra fetch --all --prune
+        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/infra checkout "$${INFRA_REPO_BRANCH}"
+        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/infra pull --ff-only origin "$${INFRA_REPO_BRANCH}" || true
+      fi
+
+      if [[ ! -d /opt/aveeus/app/.git ]]; then
+        sudo -u "$${DEPLOY_USER}" git clone "$${APP_REPO_URL}" /opt/aveeus/app
+      else
+        sudo -u "$${DEPLOY_USER}" git -C /opt/aveeus/app pull --ff-only || true
+      fi
+
+      cat >/opt/aveeus/infra/deploy/.env <<ENV
+      DOMAIN=$${DOMAIN}
+      EMAIL=$${EMAIL}
+      ENV
+      chown "$${DEPLOY_USER}:$${DEPLOY_USER}" /opt/aveeus/infra/deploy/.env
+
+      cd /opt/aveeus/infra/deploy
+      docker compose pull || true
+      docker compose up -d --build --remove-orphans
+
+      cat >/etc/systemd/system/aveeus.service <<'UNIT'
+      [Unit]
+      Description=AveDeus Continuous-Tunes stack
+      Requires=docker.service
+      After=docker.service network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/aveeus/infra/deploy
+      ExecStart=/usr/bin/docker compose up -d --remove-orphans
+      ExecStop=/usr/bin/docker compose down
+      TimeoutStartSec=0
+
+      [Install]
+      WantedBy=multi-user.target
+      UNIT
+
+      systemctl daemon-reload
+      systemctl enable avedeus.service
+
+runcmd:
+  - [ systemctl, enable, --now, fail2ban ]
+  - [ /usr/local/bin/aveeus-bootstrap.sh ]

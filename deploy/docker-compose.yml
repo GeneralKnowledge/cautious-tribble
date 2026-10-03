@@ -1,0 +1,45 @@
+# Continuous-Tunes behind Caddy (automatic HTTPS).
+# Runtime env: DOMAIN, EMAIL (see .env.example)
+#
+# On the server (cloud-init layout):
+#   /opt/aveeus/app          ← Continuous-Tunes checkout
+#   /opt/aveeus/infra/deploy ← this compose file
+# Override with APP_DIR if your layout differs.
+
+services:
+  web:
+    build:
+      context: ${APP_DIR:-../../app}
+      dockerfile: Dockerfile
+    image: continuous-tunes:latest
+    restart: unless-stopped
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:-aveeus.ovh}
+      EMAIL: ${EMAIL:?EMAIL is required for Let's Encrypt}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

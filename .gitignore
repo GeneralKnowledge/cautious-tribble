@@ -1,0 +1,24 @@
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfstate.backup
+terraform/terraform.tfvars
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Generated locally by Terraform
+.generated/
+
+# Deploy secrets / runtime env
+deploy/.env
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
