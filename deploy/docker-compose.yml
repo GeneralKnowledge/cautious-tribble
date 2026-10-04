@@ -2,8 +2,8 @@
 # Runtime env: DOMAIN, EMAIL (see .env.example)
 #
 # On the server (cloud-init layout):
-#   /opt/aveeus/app          ← Continuous-Tunes checkout
-#   /opt/aveeus/infra/deploy ← this compose file
+#   /opt/avedeus/app          ← Continuous-Tunes checkout
+#   /opt/avedeus/infra/deploy ← this compose file
 # Override with APP_DIR if your layout differs.
 
 services:
@@ -33,7 +33,7 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      DOMAIN: ${DOMAIN:-aveeus.ovh}
+      DOMAIN: ${DOMAIN:-avedeus.ovh}
       EMAIL: ${EMAIL:?EMAIL is required for Let's Encrypt}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro

@@ -9,10 +9,12 @@ help:
 	@echo "  make apply      - create/update Hetzner + DNS"
 	@echo "  make destroy    - tear down cloud resources (keeps floating IP if you remove it from config first)"
 	@echo "  make outputs    - show IPs / URLs"
-	@echo "  make bootstrap  - bootstrap EXISTING server: make bootstrap HOST=root@204.168.213.152 EMAIL=you@example.com"
+	@echo "  make bootstrap  - Path B via SSH: make bootstrap HOST=root@204.168.213.152 EMAIL=you@example.com"
 	@echo "  make deploy     - git pull + docker compose on the server"
 	@echo "  make fmt        - terraform fmt"
 	@echo "  make validate   - terraform validate"
+	@echo ""
+	@echo "Path B (console one-liner) is documented in README.md"
 
 init:
 	cd $(TF_DIR) && terraform init
@@ -32,7 +34,7 @@ outputs:
 bootstrap:
 	@test -n "$(HOST)" || (echo "HOST=user@ip required" && exit 1)
 	@test -n "$(EMAIL)" || (echo "EMAIL=you@example.com required" && exit 1)
-	./scripts/bootstrap-existing.sh "$(HOST)" "$(EMAIL)" "$(or $(DOMAIN),aveeus.ovh)"
+	./scripts/bootstrap-existing.sh "$(HOST)" "$(EMAIL)" "$(or $(DOMAIN),avedeus.ovh)"
 
 deploy:
 	./scripts/deploy.sh $(HOST)

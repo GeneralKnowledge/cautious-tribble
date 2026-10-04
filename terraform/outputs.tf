@@ -24,7 +24,7 @@ output "domain" {
 
 output "ssh_host" {
   description = "SSH alias written to .generated/ssh_config"
-  value       = "aveeus"
+  value       = "avedeus"
 }
 
 output "ssh_command" {
